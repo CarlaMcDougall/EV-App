@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">    
+    <title>Tank 300 Charge-or-Fill</title>
+    <link rel="manifest" href="./manifest.json">
+
+    <style>
+        body { font-family: Arial; background: #0f172a; color: white; margin: 0; padding: 20px; box-sizing: border-box; }
+        .container { max-width: 450px; margin: auto; background: #1e293b; padding: 20px; border-radius: 12px; }
+        h1 { text-align: center; color: #38bdf8; }
+        label { display: block; margin-top: 12px; color: #cbd5e1; }
+        input, select { width: 100%; padding: 10px; margin-top: 5px; border-radius: 8px; border: none; font-size: 16px; }
+        button { width: 100%; margin-top: 20px; padding: 12px; background: #22c55e; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; }
+        .result { margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; }
+        .hidden { display: none; }
+        .green { color: #22c55e; } .red { color: #ef4444; } .yellow { color: #facc15; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <h1>Tank 300 <br>Charge-or-Fill</h1>
+
+    <label>Petrol Consumption Method</label>
+    <select id="consumptionMode" onchange="toggleCustom()">
+        <option value="8.3">Brochure (8.3 L/100km)</option>
+        <option value="custom">Enter Custom (L/100km)</option>
+    </select>
+
+    <div id="customInputDiv" class="hidden">
+        <label>Custom L/100km</label>
+        <input id="customConsumption" type="number" value="10.5" step="0.1">
+    </div>
+
+    <label>91 Petrol Price ($/L)</label>
+    <input id="petrolPrice" type="number" value="2.70" step="0.01">
+
+    <label>Home Electricity Price (¢/kWh)</label>
+    <input id="homePrice" type="number" value="20" step="1">
+
+    <label>Public Charger Price (¢/kWh)</label>
+    <input id="chargerPrice" type="number" value="60" step="1">
+
+    <button onclick="calc()">Calculate</button>
+
+    <div class="result" id="out"></div>
+</div>
+
+<script>
+    function toggleCustom() {
+        const mode = document.getElementById('consumptionMode').value;
+        document.getElementById('customInputDiv').className = (mode === 'custom') ? '' : 'hidden';
+    }
+
+    function calc() {
+        const mode = document.getElementById('consumptionMode').value;
+        const fuelUse = (mode === 'custom') ? parseFloat(document.getElementById('customConsumption').value) : 8.3;
+        const evUse = 32.54;
+
+        let petrol = parseFloat(document.getElementById('petrolPrice').value);
+        let home = parseFloat(document.getElementById('homePrice').value);
+        let charger = parseFloat(document.getElementById('chargerPrice').value);
+
+        let petrolCost = fuelUse * petrol;
+        let evHomeCost = evUse * (home / 100);
+        let evChargerCost = evUse * (charger / 100);
+        let breakEven = (fuelUse * petrol) / evUse * 100;
+
+        let msg = "";
+        if (home < breakEven && charger < breakEven) {
+            msg = "<span class='green'>🟢 Both home and public charging are cheaper than petrol</span>";
+        } else if (home < breakEven && charger >= breakEven) {
+            msg = "<span class='yellow'>🟡 Home charging is cheaper, public charging is not. Use Petrol away from home</span>";
+        } else {
+            msg = "<span class='red'>🔴 Petrol is cheaper than both charging options</span>";
+        }
+
+        document.getElementById('out').innerHTML = `
+            <b>Cost Comparison (per 100 km)</b><br><br>
+            ⛽ Petrol (${fuelUse} L/100km): <b>$${petrolCost.toFixed(2)}</b><br>
+            🔌 Home EV cost: <b>$${evHomeCost.toFixed(2)}</b><br>
+            ⚡ Public EV cost: <b>$${evChargerCost.toFixed(2)}</b><br><br>
+            Break-even electricity price:<br>
+            <b>${breakEven.toFixed(1)} ¢/kWh</b><br><br>
+            ${msg}
+        `;
+    }
+</script>
+
+</body>
+</html>
+
