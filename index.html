@@ -35,7 +35,7 @@
     <input id="chargerPrice" type="number" value="60" step="1">
     <button onclick="calc()">Calculate</button>
     <div class="result" id="out"></div>
-    <div class="installline" id="installLine"><a href="#" onclick="installApp(event)">Tap here to install this app on your phone</a></div>
+    <div class="installline" id="installLine"><a href="#" onclick="installApp(event)">Tap here to Install this app on your phone</a></div>
 </div>
 <script>
     // ---- remember settings between sessions ----
@@ -100,10 +100,23 @@
             await deferredPrompt.userChoice;
             deferredPrompt = null;
         } else {
-            const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
-            alert(isIOS
-                ? 'To install on iPhone: tap the Share button, then "Add to Home Screen".'
-                : 'To install: open your browser menu (⋮) and choose "Add to Home screen" or "Install app".');
+            const ua = navigator.userAgent.toLowerCase();
+            const isIOS = /iphone|ipad|ipod/.test(ua);
+            const isSamsung = /samsungbrowser/.test(ua);
+            const isFirefox = /firefox/.test(ua);
+            const isFacebook = /fban|fbav|instagram/.test(ua);
+            
+            if (isFacebook) {
+                alert('To install this app: tap the three dots (⋮) in the top right, tap "Open in Chrome", then tap "Install this app again".');
+            } else if (isIOS) {
+                alert('To install on iPhone: tap the Share button (box with arrow), then "Add to Home Screen".');
+            } else if (isSamsung) {
+                alert('To install on Samsung: tap the menu button (⋮), then tap "Add page to" and confirm.');
+            } else if (isFirefox) {
+                alert('To install on Firefox: tap the menu button (⋮), scroll down and tap "Install".');
+            } else {
+                alert('To install: tap your browser menu (⋮) and choose "Add to Home screen" or "Install app".');
+            }
         }
     }
     window.addEventListener('appinstalled', () => {
