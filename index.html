@@ -13,34 +13,28 @@
         input, select { width: 100%; padding: 10px; margin-top: 5px; border-radius: 8px; border: none; font-size: 16px; }
         button { width: 100%; margin-top: 20px; padding: 12px; background: #22c55e; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; }
         .result { margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; }
-        .hidden { display: none; }
+        .hint { font-size: 12px; color: #94a3b8; margin-top: 4px; }
         .green { color: #22c55e; } .red { color: #ef4444; } .yellow { color: #facc15; }
     </style>
 </head>
 <body>
 <div class="container">
     <h1>Tank 300 <br>Charge-or-Fill</h1>
-    <label>Petrol Consumption </label>
-    <select id="consumptionMode" onchange="toggleCustom()">
-        <option value="8.3">Brochure (8.3 L/100km)</option>
-        <option value="custom">Enter Custom (L/100km)</option>
-    </select>
-    <div id="customInputDiv" class="hidden">
-        <label>Custom L/100km</label>
-        <input id="customConsumption" type="number" value="10.5" step="0.1">
-    </div>
+    <label>Petrol Consumption (L/100km)</label>
+    <input id="fuelUse" type="number" value="8.3" step="0.1">
+    <div class="hint">Brochure figure is 8.3 — type your own if you know it.</div>
     <label>91 Petrol Price ($/L)</label>
     <input id="petrolPrice" type="number" value="2.70" step="0.01">
     <label>Home Electricity Price (¢/kWh)</label>
     <input id="homePrice" type="number" value="20" step="1">
-    <label>Public Charger Electricity Price (¢/kWh)</label>
+    <label>Public Charger Price (¢/kWh)</label>
     <input id="chargerPrice" type="number" value="60" step="1">
     <button onclick="calc()">Calculate</button>
     <div class="result" id="out"></div>
 </div>
 <script>
     // Inputs we remember between sessions
-    const FIELDS = ['consumptionMode','customConsumption','petrolPrice','homePrice','chargerPrice'];
+    const FIELDS = ['fuelUse','petrolPrice','homePrice','chargerPrice'];
 
     function saveSettings() {
         try {
@@ -60,18 +54,11 @@
                 });
             }
         } catch (e) { /* ignore */ }
-        toggleCustom();   // show/hide the custom box to match the saved mode
-        calc();           // re-run so last results show straight away
-    }
-
-    function toggleCustom() {
-        const mode = document.getElementById('consumptionMode').value;
-        document.getElementById('customInputDiv').className = (mode === 'custom') ? '' : 'hidden';
+        calc();   // re-run so last results show straight away
     }
 
     function calc() {
-        const mode = document.getElementById('consumptionMode').value;
-        const fuelUse = (mode === 'custom') ? parseFloat(document.getElementById('customConsumption').value) : 8.3;
+        const fuelUse = parseFloat(document.getElementById('fuelUse').value);
         const evUse = 32.54;
         let petrol = parseFloat(document.getElementById('petrolPrice').value);
         let home = parseFloat(document.getElementById('homePrice').value);
@@ -84,7 +71,7 @@
         if (home < breakEven && charger < breakEven) {
             msg = "<span class='green'>🟢 Both home and public charging are cheaper than petrol</span>";
         } else if (home < breakEven && charger >= breakEven) {
-            msg = "<span class='yellow'>🟡 Home charging is cheaper than petrol, public charging is more expensive that Petrol. Use Petrol away from home</span>";
+            msg = "<span class='yellow'>🟡 Home charging is cheaper, public charging is not. Use Petrol away from home</span>";
         } else {
             msg = "<span class='red'>🔴 Petrol is cheaper than both charging options</span>";
         }
