@@ -9,12 +9,17 @@
         body { font-family: Arial; background: #0f172a; color: white; margin: 0; padding: 20px; box-sizing: border-box; }
         .container { max-width: 450px; margin: auto; background: #1e293b; padding: 16px 20px 20px; border-radius: 12px; }
         h1 { text-align: center; color: #22c55e; font-size: clamp(18px, 6vw, 24px); white-space: nowrap; margin: 0 0 14px; }
+        .trip-title { text-align: center; color: #22c55e; font-size: clamp(18px, 6vw, 24px); font-weight: bold; margin: 20px 0 12px; }
         label { display: block; margin-top: 12px; color: #cbd5e1; }
-        input, select { width: 100%; padding: 10px; margin-top: 5px; border-radius: 8px; border: none; font-size: 16px; }
+        input, select { width: 100%; padding: 10px; margin-top: 5px; border-radius: 8px; border: none; font-size: 16px; box-sizing: border-box; }
         button { width: 100%; margin-top: 20px; padding: 12px; background: #22c55e; border: none; border-radius: 10px; font-size: 16px; cursor: pointer; }
+        button.toggle { background: #334155; font-size: 14px; margin-top: 20px; }
         .result { margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; }
         .hint { font-size: 12px; color: #94a3b8; margin-top: 4px; }
         .fuellink { display: block; margin-top: 4px; color: #22c55e; text-decoration: none; font-size: 12px; }
+        .section-title { font-weight: bold; color: #cbd5e1; margin-top: 20px; margin-bottom: 12px; }
+        .subsection { margin-top: 16px; padding-top: 16px; border-top: 1px solid #334155; }
+        .hidden { display: none; }
         .installline { text-align: center; font-size: 12px; margin-top: 18px; }
         .installline a { color: #94a3b8; text-decoration: none; }
         .green { color: #22c55e; } .red { color: #ef4444; } .yellow { color: #facc15; }
@@ -23,22 +28,60 @@
 <body>
 <div class="container">
     <h1>GWM Tank 300 Charge-or-Fill</h1>
-    <label>Petrol Consumption (L/100km)</label>
-    <input id="fuelUse" type="number" value="8.3" step="0.1">
-    <div class="hint">Brochure figure is 8.3 — type your own if you know it.</div>
-    <label>91 Petrol Price ($/L)</label>
-    <input id="petrolPrice" type="number" value="2.70" step="0.01">
-    <a class="fuellink" href="https://petrolmate.com.au/" rel="noopener">Check cheapest fuel near you (AU &amp; NZ) →</a>
-    <label>Home Electricity Price (¢/kWh)</label>
-    <input id="homePrice" type="number" value="20" step="1">
-    <label>Public Charger Price (¢/kWh)</label>
-    <input id="chargerPrice" type="number" value="60" step="1">
-    <button onclick="calc()">Calculate</button>
-    <div class="result" id="out"></div>
-    <div class="installline" id="installLine"><a href="#" onclick="installApp(event)">Tap here to INSTALL THIS APP on your phone</a></div>
+    
+    <div id="planSection">
+        <div class="section-title">Plan your trip</div>
+        <label>Petrol Consumption (L/100km)</label>
+        <input id="fuelUse" type="number" value="8.3" step="0.1">
+        <div class="hint">Brochure figure is 8.3 — type your own if you know it.</div>
+        <label>91 Petrol Price ($/L)</label>
+        <input id="petrolPrice" type="number" value="2.70" step="0.01">
+        <a class="fuellink" href="https://petrolmate.com.au/" rel="noopener">Check cheapest fuel near you (AU &amp; NZ) →</a>
+        <label>Home Electricity Price (¢/kWh)</label>
+        <input id="homePrice" type="number" value="20" step="1">
+        <label>Public Charger Electricity Price (¢/kWh)</label>
+        <input id="chargerPrice" type="number" value="40" step="1">
+        <button onclick="calc()">Calculate</button>
+        <div class="result" id="out"></div>
+    </div>
+
+    <button class="toggle" onclick="toggleTripLog()">📊 Calculate the cost for a completed trip</button>
+    <div id="tripLogSection" class="hidden">
+        <div class="trip-title">Calculate the cost for a completed trip</div>
+        
+        <div class="subsection">
+            <div class="section-title">Start of trip</div>
+            <label>Available petrol kilometers</label>
+            <input id="petrolStartKm" type="number" value="400" step="1">
+            <label>Available EV kilometers</label>
+            <input id="evStartKm" type="number" value="158" step="1">
+            <label>What did you use to charge the battery?</label>
+            <select id="chargeType">
+                <option value="home">Home charging (cheaper)</option>
+                <option value="public">Public charging (more expensive)</option>
+            </select>
+        </div>
+
+        <div class="subsection">
+            <div class="section-title">End of trip</div>
+            <label>Available petrol kilometers</label>
+            <input id="petrolEndKm" type="number" value="380" step="1">
+            <label>Available EV kilometers</label>
+            <input id="evEndKm" type="number" value="50" step="1">
+            <label>$ spent on EV charging on this trip</label>
+            <input id="evSpent" type="number" value="0" step="0.01">
+            <label>$ spent on petrol on this trip</label>
+            <input id="petrolSpent" type="number" value="0" step="0.01">
+        </div>
+
+        <button onclick="calcTrip()" style="background: #22c55e;">Calculate Trip Cost</button>
+        <div class="result" id="tripOut"></div>
+    </div>
+
+    <div class="installline" id="installLine"><a href="#" onclick="installApp(event)">Tap here to install this app on your phone</a></div>
 </div>
+
 <script>
-    // ---- remember settings between sessions ----
     const FIELDS = ['fuelUse','petrolPrice','homePrice','chargerPrice'];
     function saveSettings() {
         try {
@@ -57,6 +100,7 @@
         } catch (e) {}
         calc();
     }
+
     function calc() {
         const fuelUse = parseFloat(document.getElementById('fuelUse').value);
         const evUse = 32.54;
@@ -87,7 +131,50 @@
         saveSettings();
     }
 
-    // ---- install-as-app handling ----
+    function toggleTripLog() {
+        const section = document.getElementById('tripLogSection');
+        section.classList.toggle('hidden');
+    }
+
+    function calcTrip() {
+        const petrolStartKm = parseFloat(document.getElementById('petrolStartKm').value);
+        const petrolEndKm = parseFloat(document.getElementById('petrolEndKm').value);
+        const evStartKm = parseFloat(document.getElementById('evStartKm').value);
+        const evEndKm = parseFloat(document.getElementById('evEndKm').value);
+        const chargeType = document.getElementById('chargeType').value;
+        const evSpent = parseFloat(document.getElementById('evSpent').value);
+        const petrolSpent = parseFloat(document.getElementById('petrolSpent').value);
+
+        const fuelUse = parseFloat(document.getElementById('fuelUse').value);
+        const petrolPrice = parseFloat(document.getElementById('petrolPrice').value);
+        const homePrice = parseFloat(document.getElementById('homePrice').value);
+        const chargerPrice = parseFloat(document.getElementById('chargerPrice').value);
+        const chargePrice = chargeType === 'home' ? homePrice : chargerPrice;
+        const chargeMethod = chargeType === 'home' ? 'Home charging' : 'Public charging';
+
+        const petrolKmUsed = petrolStartKm - petrolEndKm;
+        const evKmUsed = evStartKm - evEndKm;
+
+        const evKmEquivalent = evSpent > 0 ? (evSpent / ((chargePrice / 100) * 32.54 / 100)) : 0;
+        const petrolKmEquivalent = petrolSpent > 0 ? (petrolSpent / ((petrolPrice * fuelUse) / 100)) : 0;
+
+        const totalKm = petrolKmUsed + evKmUsed + evKmEquivalent + petrolKmEquivalent;
+
+        const petrolCostCalc = (petrolKmUsed * fuelUse / 100) * petrolPrice;
+        const evCostCalc = (evKmUsed / 100 * 32.54) * (chargePrice / 100);
+        const totalCost = petrolCostCalc + petrolSpent + evCostCalc + evSpent;
+
+        document.getElementById('tripOut').innerHTML = `
+            <b>Trip Summary</b><br><br>
+            📍 Petrol distance: <b>${petrolKmUsed} km</b> (flat, theoretical)<br>
+            ⚡ EV distance: <b>${evKmUsed} km</b> (flat, theoretical)<br><br>
+            🔌 EV charging (${chargeMethod}): <b>$${evSpent.toFixed(2)}</b> ≈ <b>${evKmEquivalent.toFixed(0)} km</b> (flat, theoretical)<br>
+            ⛽ Petrol: <b>$${petrolSpent.toFixed(2)}</b> ≈ <b>${petrolKmEquivalent.toFixed(0)} km</b> (flat, theoretical)<br><br>
+            🛣️ Total approximate km: <b>${totalKm.toFixed(0)} km</b> (flat, theoretical)<br>
+            💰 Actual total cost: <b>$${totalCost.toFixed(2)}</b>
+        `;
+    }
+
     let deferredPrompt = null;
     window.addEventListener('beforeinstallprompt', (e) => {
         e.preventDefault();
@@ -105,9 +192,8 @@
             const isSamsung = /samsungbrowser/.test(ua);
             const isFirefox = /firefox/.test(ua);
             const isFacebook = /fban|fbav|instagram/.test(ua);
-            
             if (isFacebook) {
-                alert('To install this app: tap the three dots (⋮) in the top right, tap "Open in browser", then tap "INSTALL THIS APP again".');
+                alert('To install this app: tap the three dots (⋮) in the top right, tap "Open in Chrome", then tap "Install app".');
             } else if (isIOS) {
                 alert('To install on iPhone: tap the Share button (box with arrow), then "Add to Home Screen".');
             } else if (isSamsung) {
@@ -124,7 +210,6 @@
         if (el) el.style.display = 'none';
     });
 
-    // ---- startup ----
     if ('serviceWorker' in navigator) {
         navigator.serviceWorker.register('./sw.js').catch(()=>{});
     }
