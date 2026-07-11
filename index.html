@@ -82,7 +82,7 @@
 </div>
 
 <script>
-    const FIELDS = ['fuelUse','petrolPrice','homePrice','chargerPrice'];
+    const FIELDS = ['fuelUse','petrolPrice','homePrice','chargerPrice','petrolStartKm','evStartKm','chargeType','petrolEndKm','evEndKm','evSpent','petrolSpent'];
     function saveSettings() {
         try {
             const data = {};
@@ -99,6 +99,7 @@
             }
         } catch (e) {}
         calc();
+        calcTrip();
     }
 
     function calc() {
@@ -155,7 +156,7 @@
         const petrolKmUsed = petrolStartKm - petrolEndKm;
         const evKmUsed = evStartKm - evEndKm;
 
-        const evKmEquivalent = evSpent > 0 ? (evSpent / ((chargePrice / 100) * 32.54 / 100)) : 0;
+        const evKmEquivalent = evSpent > 0 ? (evSpent / ((chargerPrice / 100) * 32.54 / 100)) : 0;
         const petrolKmEquivalent = petrolSpent > 0 ? (petrolSpent / ((petrolPrice * fuelUse) / 100)) : 0;
 
         const totalKm = petrolKmUsed + evKmUsed + evKmEquivalent + petrolKmEquivalent;
