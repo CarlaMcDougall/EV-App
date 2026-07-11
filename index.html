@@ -15,50 +15,48 @@
         .result { margin-top: 20px; padding: 15px; background: #0f172a; border-radius: 10px; }
         .hint { font-size: 12px; color: #94a3b8; margin-top: 4px; }
         .fuellink { display: block; margin-top: 4px; color: #22c55e; text-decoration: none; font-size: 12px; }
+        .installline { text-align: center; font-size: 12px; margin-top: 18px; }
+        .installline a { color: #94a3b8; text-decoration: none; }
         .green { color: #22c55e; } .red { color: #ef4444; } .yellow { color: #facc15; }
     </style>
 </head>
 <body>
 <div class="container">
-    <h1> GWM Tank 300 Charge-or-Fill</h1>
+    <h1>Tank 300 Charge-or-Fill</h1>
     <label>Petrol Consumption (L/100km)</label>
     <input id="fuelUse" type="number" value="8.3" step="0.1">
     <div class="hint">Brochure figure is 8.3 — type your own if you know it.</div>
     <label>91 Petrol Price ($/L)</label>
     <input id="petrolPrice" type="number" value="2.70" step="0.01">
-    <a class="fuellink" href="https://petrolmate.com.au/" rel="noopener">Check petrol price (AU & NZ) →</a>
+    <a class="fuellink" href="https://petrolmate.com.au/" rel="noopener">Check cheapest fuel near you (AU &amp; NZ) →</a>
     <label>Home Electricity Price (¢/kWh)</label>
     <input id="homePrice" type="number" value="20" step="1">
     <label>Public Charger Price (¢/kWh)</label>
     <input id="chargerPrice" type="number" value="60" step="1">
     <button onclick="calc()">Calculate</button>
     <div class="result" id="out"></div>
+    <div class="installline" id="installLine"><a href="#" onclick="installApp(event)">Tap here to install this app on your phone</a></div>
 </div>
 <script>
-    // Inputs we remember between sessions
+    // ---- remember settings between sessions ----
     const FIELDS = ['fuelUse','petrolPrice','homePrice','chargerPrice'];
-
     function saveSettings() {
         try {
             const data = {};
             FIELDS.forEach(id => data[id] = document.getElementById(id).value);
             localStorage.setItem('tank300Settings', JSON.stringify(data));
-        } catch (e) { /* storage blocked (e.g. Claude preview) – ignore */ }
+        } catch (e) {}
     }
-
     function loadSettings() {
         try {
             const raw = localStorage.getItem('tank300Settings');
             if (raw) {
                 const data = JSON.parse(raw);
-                FIELDS.forEach(id => {
-                    if (data[id] != null) document.getElementById(id).value = data[id];
-                });
+                FIELDS.forEach(id => { if (data[id] != null) document.getElementById(id).value = data[id]; });
             }
-        } catch (e) { /* ignore */ }
-        calc();   // re-run so last results show straight away
+        } catch (e) {}
+        calc();
     }
-
     function calc() {
         const fuelUse = parseFloat(document.getElementById('fuelUse').value);
         const evUse = 32.54;
@@ -86,16 +84,45 @@
             <b>${breakEven.toFixed(1)} ¢/kWh</b><br><br>
             ${msg}
         `;
-        saveSettings();   // remember these inputs for next time
+        saveSettings();
     }
 
-    // Restore last-used settings on launch, and save whenever anything changes
+    // ---- install-as-app handling ----
+    let deferredPrompt = null;
+    window.addEventListener('beforeinstallprompt', (e) => {
+        e.preventDefault();
+        deferredPrompt = e;
+    });
+    async function installApp(ev) {
+        ev.preventDefault();
+        if (deferredPrompt) {
+            deferredPrompt.prompt();
+            await deferredPrompt.userChoice;
+            deferredPrompt = null;
+        } else {
+            const isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+            alert(isIOS
+                ? 'To install on iPhone: tap the Share button, then "Add to Home Screen".'
+                : 'To install: open your browser menu (⋮) and choose "Add to Home screen" or "Install app".');
+        }
+    }
+    window.addEventListener('appinstalled', () => {
+        const el = document.getElementById('installLine');
+        if (el) el.style.display = 'none';
+    });
+
+    // ---- startup ----
+    if ('serviceWorker' in navigator) {
+        navigator.serviceWorker.register('./sw.js').catch(()=>{});
+    }
     window.addEventListener('DOMContentLoaded', () => {
         FIELDS.forEach(id => {
             const el = document.getElementById(id);
             el.addEventListener('input', saveSettings);
             el.addEventListener('change', saveSettings);
         });
+        const standalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone === true;
+        if (standalone) { const il = document.getElementById('installLine'); if (il) il.style.display = 'none'; }
         loadSettings();
     });
 </script>
