@@ -29,6 +29,9 @@
         .modeBtn.selected { background: #22c55e; color: #ffffff; border-color: #22c55e; }
         .modeHighlight { background: #22c55e; color: #0f172a; padding: 4px 10px; border-radius: 6px; font-weight: bold; display: inline-block; margin-top: 8px; }
         .screenshotBtn { background: #334155; font-size: 15px; font-weight: bold; color: #ffffff; }
+        .subheading { color: #22c55e; font-weight: bold; margin-top: 14px; margin-bottom: 4px; }
+        .smallnote { font-size: 11px; color: #94a3b8; margin-top: 2px; margin-bottom: 8px; }
+        .tightline { margin: 2px 0; }
     </style>
 </head>
 <body>
@@ -191,7 +194,6 @@
         const homePrice = parseFloat(document.getElementById('homePrice').value);
         const chargerPrice = parseFloat(document.getElementById('chargerPrice').value);
         const chargePrice = chargeType === 'home' ? homePrice : chargerPrice;
-        const chargeMethod = chargeType === 'home' ? 'Home charging' : 'Public charging';
 
         const petrolKmUsed = petrolStartKm - petrolEndKm;
         const evKmUsed = evStartKm - evEndKm;
@@ -210,11 +212,17 @@
 
         document.getElementById('tripOut').innerHTML = `
             <b>Trip Summary for ${tripName}</b><br><br>
-            📍 Petrol distance: <b>${petrolKmUsed} km</b> (flat, theoretical)<br>
-            ⚡ EV distance: <b>${evKmUsed} km</b> (flat, theoretical)<br><br>
-            🔌 EV charging (${chargeMethod}): <b>$${evSpent.toFixed(2)}</b> ≈ <b>${evKmEquivalent.toFixed(0)} km</b> (flat, theoretical)<br>
-            ⛽ Petrol: <b>$${petrolSpent.toFixed(2)}</b> ≈ <b>${petrolKmEquivalent.toFixed(0)} km</b> (flat, theoretical)<br><br>
-            🛣️ Total approximate km (calculated from petrol and EV distances): <b>${totalKmTheoretical.toFixed(0)} km</b><br>
+            <div class="subheading">Distances traveled</div>
+            <div class="tightline">📍 Petrol distance: <b>${petrolKmUsed} km</b></div>
+            <div class="tightline">⚡ EV distance: <b>${evKmUsed} km</b></div>
+            <div class="smallnote">Theoretical distance on flat terrain</div>
+
+            <div class="subheading">Charge/fuel added during journey</div>
+            <div class="tightline">🔌 EV charging: <b>$${evSpent.toFixed(2)}</b> ≈ <b>${evKmEquivalent.toFixed(0)} km</b></div>
+            <div class="tightline">⛽ Petrol added: <b>$${petrolSpent.toFixed(2)}</b> ≈ <b>${petrolKmEquivalent.toFixed(0)} km</b></div>
+            <div class="smallnote">Theoretical distance on flat terrain</div>
+
+            🛣️ Total theoretical km: <b>${totalKmTheoretical.toFixed(0)} km</b><br>
             🚗 Total actual km (from odometer): <b>${odomKmUsed} km</b><br><br>
             💰 Actual total cost: <b>$${totalCost.toFixed(2)}</b><br>
             💵 Cost per 100 km (odometer): <b>$${costPer100km.toFixed(2)}</b>
