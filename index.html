@@ -23,6 +23,10 @@
         .installline { text-align: center; font-size: 12px; margin-top: 18px; }
         .installline a { color: #94a3b8; text-decoration: none; }
         .green { color: #22c55e; } .red { color: #ef4444; } .yellow { color: #facc15; }
+        .modeRow { display: flex; gap: 8px; margin-top: 5px; }
+        .modeBtn { flex: 1; padding: 10px 4px; margin-top: 0; background: #ffffff; color: #0f172a; border-radius: 8px; font-size: 14px; font-weight: bold; text-align: center; cursor: pointer; border: 2px solid #334155; }
+        .modeBtn.selected { background: #22c55e; color: #ffffff; border-color: #22c55e; }
+        .modeHighlight { background: #22c55e; color: #0f172a; padding: 4px 10px; border-radius: 6px; font-weight: bold; display: inline-block; margin-top: 8px; }
     </style>
 </head>
 <body>
@@ -62,6 +66,13 @@
                 <option value="home">Home charging (cheaper)</option>
                 <option value="public">Public charging (more expensive)</option>
             </select>
+            <label>Method of travel</label>
+            <div class="modeRow">
+                <div class="modeBtn selected" id="modeEV" onclick="selectMode('EV')">EV</div>
+                <div class="modeBtn" id="modeHEV" onclick="selectMode('HEV')">HEV</div>
+                <div class="modeBtn" id="modeIntelligent" onclick="selectMode('Intelligent')">Intelligent</div>
+            </div>
+            <input type="hidden" id="travelMode" value="EV">
         </div>
 
         <div class="subsection">
@@ -86,7 +97,7 @@
 </div>
 
 <script>
-    const FIELDS = ['fuelUse','petrolPrice','homePrice','chargerPrice','petrolStartKm','evStartKm','odomStart','chargeType','petrolEndKm','evEndKm','odomEnd','evSpent','petrolSpent'];
+    const FIELDS = ['fuelUse','petrolPrice','homePrice','chargerPrice','petrolStartKm','evStartKm','odomStart','chargeType','travelMode','petrolEndKm','evEndKm','odomEnd','evSpent','petrolSpent'];
     function saveSettings() {
         try {
             const data = {};
@@ -100,10 +111,19 @@
             if (raw) {
                 const data = JSON.parse(raw);
                 FIELDS.forEach(id => { if (data[id] != null) document.getElementById(id).value = data[id]; });
+                if (data.travelMode) selectMode(data.travelMode);
             }
         } catch (e) {}
         calc();
         calcTrip();
+    }
+
+    function selectMode(mode) {
+        document.getElementById('travelMode').value = mode;
+        ['EV','HEV','Intelligent'].forEach(m => {
+            document.getElementById('mode' + m).classList.toggle('selected', m === mode);
+        });
+        saveSettings();
     }
 
     function calc() {
@@ -151,6 +171,7 @@
         const evStartKm = parseFloat(document.getElementById('evStartKm').value);
         const evEndKm = parseFloat(document.getElementById('evEndKm').value);
         const chargeType = document.getElementById('chargeType').value;
+        const travelMode = document.getElementById('travelMode').value;
         const evSpent = parseFloat(document.getElementById('evSpent').value);
         const petrolSpent = parseFloat(document.getElementById('petrolSpent').value);
 
@@ -186,6 +207,7 @@
             🚗 Total actual km (from odometer): <b>${odomKmUsed} km</b><br><br>
             💰 Actual total cost: <b>$${totalCost.toFixed(2)}</b><br>
             💵 Cost per 100 km (odometer): <b>$${costPer100km.toFixed(2)}</b>
+            <div class="modeHighlight">Travelling in: ${travelMode} mode</div>
         `;
     }
 
