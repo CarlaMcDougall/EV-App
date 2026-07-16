@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">    
     <title>GWM Tank 300 Charge-or-Fill</title>
     <link rel="manifest" href="./manifest.json">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
     <style>
         body { font-family: Arial; background: #0f172a; color: white; margin: 0; padding: 20px; box-sizing: border-box; }
         .container { max-width: 450px; margin: auto; background: #1e293b; padding: 16px 20px 20px; border-radius: 12px; }
@@ -52,6 +53,9 @@
     <button class="toggle" onclick="toggleTripLog()"><span>Trip cost calculator (actual)</span><span class="arrow" id="tripArrow">↓</span></button>
     <div id="tripLogSection" class="hidden">
         <div class="section-title">Calculate the cost of a completed trip</div>
+
+        <label>Trip name</label>
+        <input id="tripName" type="text" placeholder="e.g. Napier to Wairoa">
         
         <div class="subsection">
             <div class="section-title">Start of trip</div>
@@ -91,13 +95,14 @@
 
         <button onclick="calcTrip()" style="background: #22c55e;">Calculate Trip Cost</button>
         <div class="result" id="tripOut"></div>
+        <button id="screenshotBtn" onclick="takeScreenshot()" style="background: #334155; display: none;">📸 Click here to screenshot results</button>
     </div>
 
     <div class="installline" id="installLine"><a href="#" onclick="installApp(event)">Tap here to install this app on your phone</a></div>
 </div>
 
 <script>
-    const FIELDS = ['fuelUse','petrolPrice','homePrice','chargerPrice','petrolStartKm','evStartKm','odomStart','chargeType','travelMode','petrolEndKm','evEndKm','odomEnd','evSpent','petrolSpent'];
+    const FIELDS = ['fuelUse','petrolPrice','homePrice','chargerPrice','tripName','petrolStartKm','evStartKm','odomStart','chargeType','travelMode','petrolEndKm','evEndKm','odomEnd','evSpent','petrolSpent'];
     function saveSettings() {
         try {
             const data = {};
@@ -164,6 +169,7 @@
     }
 
     function calcTrip() {
+        const tripName = document.getElementById('tripName').value || 'your trip';
         const odomStart = parseFloat(document.getElementById('odomStart').value);
         const odomEnd = parseFloat(document.getElementById('odomEnd').value);
         const petrolStartKm = parseFloat(document.getElementById('petrolStartKm').value);
@@ -198,7 +204,7 @@
         const costPer100km = odomKmUsed > 0 ? (totalCost / odomKmUsed) * 100 : 0;
 
         document.getElementById('tripOut').innerHTML = `
-            <b>Trip Summary</b><br><br>
+            <b>Trip Summary for ${tripName}</b><br><br>
             📍 Petrol distance: <b>${petrolKmUsed} km</b> (flat, theoretical)<br>
             ⚡ EV distance: <b>${evKmUsed} km</b> (flat, theoretical)<br><br>
             🔌 EV charging (${chargeMethod}): <b>$${evSpent.toFixed(2)}</b> ≈ <b>${evKmEquivalent.toFixed(0)} km</b> (flat, theoretical)<br>
@@ -209,6 +215,23 @@
             💵 Cost per 100 km (odometer): <b>$${costPer100km.toFixed(2)}</b>
             <div class="modeHighlight">Travelling in: ${travelMode} mode</div>
         `;
+        document.getElementById('screenshotBtn').style.display = 'block';
+    }
+
+    function takeScreenshot() {
+        const resultBox = document.getElementById('tripOut');
+        html2canvas(resultBox, { backgroundColor: '#0f172a' }).then(canvas => {
+            canvas.toBlob(function(blob) {
+                const url = URL.createObjectURL(blob);
+                const link = document.createElement('a');
+                link.href = url;
+                link.download = 'trip-cost-result.png';
+                document.body.appendChild(link);
+                link.click();
+                document.body.removeChild(link);
+                URL.revokeObjectURL(url);
+            });
+        });
     }
 
     let deferredPrompt = null;
